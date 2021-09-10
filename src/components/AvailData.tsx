@@ -28,20 +28,41 @@ type simpleCB = () => void;
 type AlertMessage = [AlertType, string];
 type setReact = (alert: AlertMessage, data: string, deleteCB: simpleCB) => void;
 
-export function Linkify(props: { text: string }) {
+const isLink = (e) => e.startsWith("http://") || e.startsWith("https://");
+const isImage = (e) => e.startsWith("[img]") && e.endsWith("[/img]");
+
+const redactCopy = (txt) => {
+  // not really stopping anyone, just to avoid copy secret on mistake
+  return txt.replace(/\[img\].*?\[\/img\]/g, "<IMAGE>");
+};
+
+export function TextEffects(props: { text: string }) {
   return (
     <>
-      {props.text.split(" ").map((e) =>
-        e.startsWith("http://") || e.startsWith("https://") ? (
-          <>
-            <a target="_blank" rel="noreferrer" href={e}>
-              {e}
-            </a>{" "}
-          </>
-        ) : (
-          <>{e} </>
-        )
-      )}
+      {props.text.split(" ").map((e, i) => {
+        if (isLink(e)) {
+          return (
+            <a target="_blank" rel="noreferrer" href={e} key={e + i}>
+              {e}{" "}
+            </a>
+          );
+        } else if (isImage(e)) {
+          let link = encodeURI(e.match(/\[img\](.*?)\[\/img\]/)[1]);
+          if (!isLink(link)) {
+            return <>Invalid Image link </>;
+          }
+          return (
+            <img
+              style={{ width: "100%" }}
+              src={link}
+              alt="Secret"
+              key={e + i}
+            />
+          );
+        } else {
+          return <>{e} </>;
+        }
+      })}
     </>
   );
 }
@@ -122,7 +143,7 @@ export function ShowOrDelete(props: {
                 <CopyOutlined style={{ fontSize: "2em" }} key="copy-icon" />,
                 <CheckOutlined style={{ fontSize: "2em" }} key="copied-icon" />
               ],
-              text: modalData + alertMsg[1]
+              text: redactCopy(modalData + alertMsg[1])
             }}
           >
             Copy All Text
@@ -151,11 +172,11 @@ export function ShowOrDelete(props: {
                     }}
                     key={l + i}
                   >
-                    <Linkify text={l} />
+                    <TextEffects text={l} />
 
                     <Paragraph
                       copyable={{
-                        text: l,
+                        text: redactCopy(l),
                         icon: [
                           <CopyOutlined
                             style={{ fontSize: "2em" }}
