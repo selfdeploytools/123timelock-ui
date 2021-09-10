@@ -298,7 +298,8 @@ export default function App() {
         </>
         <Divider />
         <div style={{ textAlign: "center" }}>
-          Copyright 2021 (c) 123timelock (c) 123selfcontrol <br />
+          Provided with no cost, thanks to Vercel.com + CodeSandbox.io 💘 <br />
+          Copyright 2021 (c) timelock.my123.app (c) 123timelock <br />
           <Button type="link" onClick={() => setShowDebug((old) => !old)}>
             Toggle Debug
           </Button>{" "}
