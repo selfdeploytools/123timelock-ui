@@ -94,7 +94,7 @@ export function KeyInput(props: {
     setQrKey(qrKey + 1);
     setQrData("");
     setQrVisible(false);
-    setQrValidMsg(modalMsgs.paste);
+    setQrValidMsg(modalMsgs.scan);
   };
 
   const clearInputs = () => {
