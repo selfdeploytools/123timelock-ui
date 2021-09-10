@@ -1,2 +1,2 @@
-# 123timelock-ui
+# 123digitaltimelock-ui
 Created with CodeSandbox

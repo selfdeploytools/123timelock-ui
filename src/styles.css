@@ -1,0 +1,53 @@
+.ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
+  top: 5.0005px !important;
+}
+
+.ant-checkbox-wrapper {
+  font-size: 17px !important;
+}
+
+.ant-list-item {
+  flex-wrap: nowrap !important;
+}
+
+/* - Click to scroll bad solution
+.ant-collapse-header {
+  display: flex !important;
+} */
+
+@media screen and (max-width: 800px) {
+  .ant-modal-mask {
+    animation-duration: 0s !important; /* fade */
+  }
+
+  .ant-modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ant-modal-body {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+
+  .ant-modal {
+    animation-duration: 0s !important; /* zoom */
+
+    position: fixed;
+    display: contents;
+
+    margin: 0;
+    padding: 0;
+
+    bottom: 0;
+    right: 0;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
