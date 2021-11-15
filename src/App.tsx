@@ -260,6 +260,9 @@ export default function App() {
             <Panel header="Lock new data" key="4">
               <AddLockData />
             </Panel>
+            <Panel header="Store remote key for later" key="4.4">
+              
+            </Panel>
           </Collapse>
           <br />
           <Divider>
