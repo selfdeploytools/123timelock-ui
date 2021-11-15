@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as encryptor from "simple-encryptor";
 import { Alert, Button, Checkbox, Input, Space } from "antd";
 
 import { uuidv4 } from "../utils/utils";
@@ -11,6 +10,9 @@ import { MobileDataHelperModal } from "../components/MobileDataHelperModal";
 import { addLockedData, KeyDef } from "../redux/main-slice";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { BoldTime } from "./BoldTime";
+
+//onst encryptor = require("simple-encryptor");
+import * as encryptor from "simple-encryptor";
 
 const { TextArea } = Input;
 
@@ -156,7 +158,6 @@ export function AddLockData() {
           onChange={(e) => {
             setData(e.target.value);
           }}
-          dir="auto"
         />
         <span>
           <b>3.</b> Enter a nickname for this data:{" "}
