@@ -1,5 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export type TempStartInfo = {
+  from: number,
+  tempproof: string
+}
+
+
 export type KeyDef = {
   id: string;
   keySalt: string;
@@ -33,6 +39,7 @@ export type MainSliceDef = {
   keys: KeyDef[];
   lockedData: LockedDataDef[];
   unlocks: UnlockDef[];
+  temps: TempStartInfo[];
 };
 
 export type delUnlockDef = [string, number, number];
@@ -45,7 +52,8 @@ const initialState: MainSliceDef = localStorage.getItem(MainSliceStorageKey)
   : {
       keys: [],
       lockedData: [],
-      unlocks: []
+      unlocks: [], 
+      temps: []
     };
 
 export const mainSlice = createSlice({
@@ -76,7 +84,6 @@ export const mainSlice = createSlice({
         return { payload: data };
       }
     },
-
     delKey: {
       reducer(state, action: PayloadAction<string>) {
         state.keys = state.keys.filter((e) => e.id !== action.payload);
@@ -130,7 +137,25 @@ export const mainSlice = createSlice({
       state.keys = [];
       state.lockedData = [];
       state.unlocks = [];
-    }
+    },
+    addTempInfo: {
+      reducer(state, action: PayloadAction<TempStartInfo>) {
+        state.temps.push(action.payload);
+      },
+      prepare(data:TempStartInfo) {
+        return {payload:data};
+      }
+    },
+    delTempInfo: {
+      reducer(state, action: PayloadAction<string>) {
+        state.temps = state.temps.filter(
+          (e) => e.tempproof !== action.payload
+        );
+      },
+      prepare(proof: string) {
+        return { payload: proof };
+      }
+    },
   }
 });
 
@@ -148,6 +173,7 @@ export const {
   delLockedData,
   delUnLockedData,
   clearAll,
-  forgetKey
+  forgetKey,
+  addTempInfo, delTempInfo
 } = mainSlice.actions;
 export default mainSlice.reducer;
