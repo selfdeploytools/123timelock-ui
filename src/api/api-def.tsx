@@ -139,29 +139,69 @@ export const fetchFinishUnlock = async (
   return result;
 };
 
-// =============  React Funcs  ==============
+export const fetchCreateTemp = async (
+  token: string,
+  tokenproof: string,
+  salt: string
+) => {
+  const result: {
+    err?: string;
+    data: {
+      from: number;
+      tempproof: string;
+    };
+  } = await fastGET("/temp/begin", {
+    token,
+    tokenproof,
+    salt
+  });
+  console.log("/temp/begin", result);
+  return result;
+};
 
-/*
-import createPersistedState from "use-persisted-state";
-const ALL_GROUPS = "all_groups_names";
+export const fetchConvertFastTemp = async (
+  token: string,
+  tempproof: string,
+  from: number,
+  salt: string
+) => {
+  const result: {
+    err?: string;
+    data: {
+      mindiff: string;
+      fastproof: string;
+    };
+  } = await fastGET("/temp/fastcopy", {
+    token,
+    tempproof,
+    from: from.toString(),
+    salt
+  });
+  console.log("/temp/fastcopy", result);
+  return result;
+};
 
-export function GroupIterator(props: {
-  render_callback: (
-    groupNames: string[],
-    addGroupName: (name: string) => void
-  ) => JSX.Element;
-}) {
-  const [allGroups, setAllGroups] = createPersistedState(ALL_GROUPS)(
-    [] as Array<string>
-  );
-  return props.render_callback(
-    allGroups.filter(function (item, pos, ary) {
-      // remove duplicates
-      return !pos || item != ary[pos - 1];
-    }),
-    (name: string) => {
-      setAllGroups((old) => [name, ...old]);
-    }
-  );
-}
-*/
+export const fetchUnloackWithFast = async (
+  token: string,
+  salt: string,
+  mindiff: string,
+  fastproof: string,
+  enckey: string
+) => {
+  const result: {
+    err?: string;
+    data: {
+      from: number;
+      to: number;
+      proof: string;
+    };
+  } = await fastGET("/temp/fastcopy", {
+    token,
+    salt,
+    mindiff,
+    fastproof,
+    enckey
+  });
+  console.log("/temp/fastcopy", result);
+  return result;
+};
