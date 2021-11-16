@@ -78,6 +78,7 @@ import { default as prettyms } from "pretty-ms";
 
 import * as QrReaderAll from "react-qr-reader";
 import * as QRCodeALL from "qrcode.react";
+import { StoreForTemp } from "./components/StoreForTemp";
 const QrReader = QrReaderAll.default;
 const QrCode = QRCodeALL.default;
 
@@ -212,12 +213,12 @@ export default function App() {
   const onCollapse = (e: Element) => {
     clearTimeout(scrollTimeout);
     setScrollTimeout(
-      (setTimeout(() => {
+      setTimeout(() => {
         (e as HTMLElement).scrollIntoView({
           block: "start",
           behavior: "smooth"
         });
-      }, 450) as unknown) as number
+      }, 450) as unknown as number
     );
   };
 
@@ -254,14 +255,11 @@ export default function App() {
             <Panel header="Available Data" key="1">
               <AvailableData />
             </Panel>
-            <Panel header="Unlock data with a delayed key" key="2">
+            <Panel header="Use a key now" key="2">
               <StartUnlock />
             </Panel>
-            <Panel header="Lock new data" key="4">
-              <AddLockData />
-            </Panel>
             <Panel header="Store remote key for later" key="4.4">
-              
+              <StoreForTemp />
             </Panel>
           </Collapse>
           <br />
@@ -270,6 +268,9 @@ export default function App() {
             <Title level={2}> 1️⃣ Once in a while:</Title>{" "}
           </Divider>
           <Collapse accordion>
+            <Panel header="Lock new data" key="4">
+              <AddLockData />
+            </Panel>
             <Panel header="Manage saved locked data" key="1">
               <ManageData />
             </Panel>
@@ -301,7 +302,10 @@ export default function App() {
         </>
         <Divider />
         <div style={{ textAlign: "center" }}>
-          Provided with no cost, thanks to Vercel.com + CodeSandbox.io 💘 <br />
+          Provided with no cost,
+          <br />
+          thanks to the free resources from Vercel.com + CodeSandbox.io 💘{" "}
+          <br />
           Copyright 2021 (c) timelock.my123.app (c) 123timelock <br />
           <Button type="link" onClick={() => setShowDebug((old) => !old)}>
             Toggle Debug

@@ -33,6 +33,7 @@ export function DebugData() {
   const keys = useAppSelector((state) => state.main.keys);
   const locked = useAppSelector((state) => state.main.lockedData);
   const unlocks = useAppSelector((state) => state.main.unlocks);
+  const temps = useAppSelector((state) => state.main.temps);
 
   const [url, setUrl] = React.useState(
     localStorage.getItem("SERVER_URL") || "<default>"
@@ -93,6 +94,15 @@ export function DebugData() {
             >
               Del
             </Button>{" "}
+          </li>
+        ))}
+      </ul>
+      <ul>
+        <u>Temps</u>
+
+        {temps.map((e) => (
+          <li key={e.tempproof}>
+            {e.token}: {e.from} - {e.tempproof}
           </li>
         ))}
       </ul>

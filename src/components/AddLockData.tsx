@@ -36,7 +36,9 @@ export function AddLockData() {
     if (clearOldTimeout > -1) {
       clearTimeout(clearOldTimeout);
     }
-    setClearOldTimeout(setTimeout(() => setAlertList([]), 5 * 1000));
+    setClearOldTimeout(
+      setTimeout(() => setAlertList([]), 5 * 1000) as unknown as number
+    );
   };
 
   const addAlert = (type: AlertType, msg: string) => {
@@ -156,7 +158,6 @@ export function AddLockData() {
           onChange={(e) => {
             setData(e.target.value);
           }}
-          dir="auto"
         />
         <span>
           <b>3.</b> Enter a nickname for this data:{" "}
