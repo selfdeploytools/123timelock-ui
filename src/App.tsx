@@ -296,7 +296,10 @@ export default function App() {
               <br />
               <Divider>
                 {" "}
-                <Title level={2}> 🔌 Debug</Title>{" "}
+                <Title level={2}>
+                  {" "}
+                  <CEmoji text="🔌" /> Debug
+                </Title>{" "}
               </Divider>
               <Collapse defaultActiveKey="3">
                 <Panel header="Debug Data" key="3">
