@@ -1,34 +1,14 @@
 import * as React from "react";
 
-import {
-  Button,
-  Divider,
-  Modal,
-  Radio,
-  Input,
-  List,
-  message,
-  Alert,
-  Steps,
-  Typography,
-  Space,
-  DatePicker,
-  Collapse,
-  Tag,
-  Select,
-  TimePicker,
-  InputNumber
-} from "antd";
+import { Space } from "antd";
 
 import { AlertList, AddToAlertList } from "./AlertList";
 
 import { fetchCreateTemp } from "../api/api-def";
 
-import { useAppDispatch, useAppSelector } from "../redux/store";
-import { TempStartInfo, addTempInfo, KeyDef } from "../redux/main-slice";
+import { useAppDispatch } from "../redux/store";
+import { addTempInfo, KeyDef } from "../redux/main-slice";
 import { KeyInput } from "./KeyInput";
-
-const { Option } = Select;
 
 export function StoreForTemp() {
   const dispath = useAppDispatch();
