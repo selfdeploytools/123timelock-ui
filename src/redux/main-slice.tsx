@@ -48,14 +48,15 @@ export type delUnlockDef = [string, number, number];
 export const MainSliceStorageKey = "redux_main_store_cache";
 export const MainSliceTypePrefix = "main";
 
-const initialState: MainSliceDef = localStorage.getItem(MainSliceStorageKey)
-  ? JSON.parse(localStorage.getItem(MainSliceStorageKey))
-  : {
-      keys: [],
-      lockedData: [],
-      unlocks: [],
-      temps: []
-    };
+const initialState: MainSliceDef = {
+  keys: [],
+  lockedData: [],
+  unlocks: [],
+  temps: [],
+  ...(localStorage.getItem(MainSliceStorageKey)
+    ? JSON.parse(localStorage.getItem(MainSliceStorageKey))
+    : {})
+};
 
 export const mainSlice = createSlice({
   name: MainSliceTypePrefix,
