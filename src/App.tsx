@@ -79,6 +79,7 @@ import { default as prettyms } from "pretty-ms";
 import * as QrReaderAll from "react-qr-reader";
 import * as QRCodeALL from "qrcode.react";
 import { StoreForTemp } from "./components/StoreForTemp";
+import { CEmoji } from "./components/CEmoji";
 const QrReader = QrReaderAll.default;
 const QrCode = QRCodeALL.default;
 
@@ -249,7 +250,10 @@ export default function App() {
         </div>
         <>
           <Divider>
-            <Title level={2}> ⚔ Everyday use:</Title>{" "}
+            <Title level={2}>
+              {" "}
+              <CEmoji text="⚔" /> Everyday use:
+            </Title>{" "}
           </Divider>
           <Collapse accordion defaultActiveKey="1">
             <Panel header="Available Data" key="1">
@@ -265,7 +269,10 @@ export default function App() {
           <br />
           <Divider>
             {" "}
-            <Title level={2}> 1️⃣ Once in a while:</Title>{" "}
+            <Title level={2}>
+              {" "}
+              <CEmoji text="1️⃣" /> Once in a while:
+            </Title>{" "}
           </Divider>
           <Collapse accordion>
             <Panel header="Lock new data" key="4">

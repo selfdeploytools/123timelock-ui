@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from "../redux/store";
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
 
 import { default as prettyms } from "pretty-ms";
+import { CEmoji } from "./CEmoji";
 const { Title, Text, Paragraph } = Typography;
 
 export function SimpleEmpty() {
@@ -98,11 +99,11 @@ export function ShowOrDelete(props: {
     }
 
     setCloseTimeout(
-      (setTimeout(() => {
+      setTimeout(() => {
         setModalData("");
         setAlertMsg(["error", ""]);
         setModalVisible(false);
-      }, 15 * 1000) as unknown) as number
+      }, 15 * 1000) as unknown as number
     );
     setModalVisible(true);
   };
@@ -265,7 +266,9 @@ export function AvailableData() {
     <>
       <Divider orientation="left">
         {" "}
-        <Title level={4}>✅ Unlocked now</Title>
+        <Title level={4}>
+          <CEmoji text="✅" /> Unlocked now
+        </Title>
       </Divider>
       <ShowOrDelete
         unlocksArray={unlocks.filter((u) => u.from < nowTime && u.to > nowTime)}
@@ -277,7 +280,9 @@ export function AvailableData() {
         btnDanger={false}
       />
       <Divider orientation="left">
-        <Title level={4}>⏳ Upcoming...</Title>
+        <Title level={4}>
+          <CEmoji text="⏳" /> Upcoming...
+        </Title>
       </Divider>
       <ShowOrDelete
         unlocksArray={unlocks.filter((u) => u.from > nowTime)}
@@ -289,7 +294,10 @@ export function AvailableData() {
         btnDanger={false}
       />
       <Divider orientation="left">
-        <Title level={4}> 🐌 Too late </Title>
+        <Title level={4}>
+          {" "}
+          <CEmoji text="🐌" /> Too late{" "}
+        </Title>
       </Divider>
       <ShowOrDelete
         unlocksArray={unlocks.filter((u) => u.to < nowTime)}

@@ -64,7 +64,7 @@ export function StoreForTemp() {
             AddToAlertList(
               ALERT_LIST_NAME,
               "error",
-              `Error fetching: ${error}`
+              `Error storing key for later: ${error}`
             );
           }
         }

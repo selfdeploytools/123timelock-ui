@@ -1,3 +1,10 @@
+.emoji {
+  color: initial;
+  font-weight: initial;
+  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", Times,
+    Symbola, Aegyptus, Code2000, Code2001, Code2002, Musica, serif, LastResort;
+}
+
 .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
   top: 5.0005px !important;
 }
