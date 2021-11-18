@@ -172,6 +172,9 @@ export function ShareTemp() {
                 bordered
                 column={1}
               >
+                <Descriptions.Item label="Key">
+                  <BoldTime time={selectedTemp?.token} />
+                </Descriptions.Item>
                 <Descriptions.Item label="Code">
                   <ShowCode code={tempCode[0]} />
                 </Descriptions.Item>

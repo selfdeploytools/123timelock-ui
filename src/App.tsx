@@ -81,6 +81,7 @@ import * as QRCodeALL from "qrcode.react";
 import { StoreForTemp } from "./components/StoreForTemp";
 import { CEmoji } from "./components/CEmoji";
 import { ShareTemp } from "./components/ShareTemp";
+import { UseSharedCode } from "./components/UseSharedCode";
 const QrReader = QrReaderAll.default;
 const QrCode = QRCodeALL.default;
 
@@ -268,6 +269,9 @@ export default function App() {
             </Panel>
             <Panel header="Share a remote key from before" key="4.5">
               <ShareTemp />
+            </Panel>
+            <Panel header="Unlock using shared code" key="4.6">
+              <UseSharedCode />
             </Panel>
           </Collapse>
           <br />
