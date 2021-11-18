@@ -133,7 +133,7 @@ const TestDocument = (props: { keys: KeyDef[]; images: string[] }) => {
   );
 };
 
-const getQR = (data: string) => {
+export const getQR = (data: string) => {
   return new Promise<string>((ok, bad) => {
     QRCode.toDataURL(data, (err, url) => {
       if (err) return bad(err);

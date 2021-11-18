@@ -302,6 +302,7 @@ export function KeyInput(props: {
                   // "&& qrReadOpen" => Check if our instance
                   validateKeyObj(data, modalMsgs.scan, setQrValidMsg);
                   setQrData(data);
+                  console.log(data);
                 }
               }}
               facingMode={"environment"}

@@ -11,6 +11,7 @@ import { MobileDataHelperModal } from "../components/MobileDataHelperModal";
 import { addLockedData, KeyDef } from "../redux/main-slice";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { BoldTime } from "./BoldTime";
+import { ShowOrDelete } from "./AvailData";
 
 const { TextArea } = Input;
 
@@ -37,7 +38,7 @@ export function AddLockData() {
       clearTimeout(clearOldTimeout);
     }
     setClearOldTimeout(
-      setTimeout(() => setAlertList([]), 5 * 1000) as unknown as number
+      (setTimeout(() => setAlertList([]), 5 * 1000) as unknown) as number
     );
   };
 
@@ -148,7 +149,8 @@ export function AddLockData() {
           }}
         />
         <span>
-          <b>2. </b> Enter data here (you can copy row by row later):
+          <b>2. </b> Enter data here (you can copy row by row later): <br />
+          <sub>You can use [img] [totp] and [qr] with ending tag [/...]</sub>
         </span>
         <TextArea
           dir="auto"
@@ -158,6 +160,16 @@ export function AddLockData() {
           onChange={(e) => {
             setData(e.target.value);
           }}
+        />
+        <ShowOrDelete
+          deleteOnly={false}
+          unlocksArray={[{ desc: "Preview Data" }]}
+          timecalc={() => 0}
+          callback={(u, set) => {
+            set(null, data, () => {});
+          }}
+          btnType="primary"
+          btnDanger={false}
         />
         <span>
           <b>3.</b> Enter a nickname for this data:{" "}

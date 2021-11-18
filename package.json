@@ -1,5 +1,5 @@
 {
-  "name": "wizard-draft-with-redux",
+  "name": "ui-fork-181121",
   "version": "1.0.0",
   "description": "",
   "keywords": [],
@@ -11,6 +11,7 @@
     "@types/qrcode": "1.4.0",
     "@types/qrcode.react": "1.0.1",
     "@types/react-qr-reader": "2.1.3",
+    "@types/totp-generator": "0.0.2",
     "@types/use-persisted-state": "0.3.0",
     "antd": "4.10.2",
     "lodash": "4.17.21",
@@ -22,7 +23,8 @@
     "react-qr-reader": "2.2.1",
     "react-redux": "7.2.4",
     "react-scripts": "4.0.3",
-    "simple-encryptor": "4.0.0"
+    "simple-encryptor": "4.0.0",
+    "totp-generator": "0.0.12"
   },
   "devDependencies": {
     "@types/react": "16.9.19",

@@ -216,12 +216,12 @@ export default function App() {
   const onCollapse = (e: Element) => {
     clearTimeout(scrollTimeout);
     setScrollTimeout(
-      setTimeout(() => {
+      (setTimeout(() => {
         (e as HTMLElement).scrollIntoView({
           block: "start",
           behavior: "smooth"
         });
-      }, 450) as unknown as number
+      }, 450) as unknown) as number
     );
   };
 
@@ -243,6 +243,8 @@ export default function App() {
     };
   }, []);
 
+  const [mainKeys, setMainKeys] = React.useState("1");
+
   return (
     <Provider store={store}>
       <div>
@@ -254,20 +256,24 @@ export default function App() {
           <Divider>
             <Title level={2}>
               {" "}
+              <CEmoji text="" /> Available Data:
+            </Title>{" "}
+          </Divider>
+          <AvailableData />
+          <Divider>
+            <Title level={2}>
+              {" "}
               <CEmoji text="⚔" /> Everyday use:
             </Title>{" "}
           </Divider>
-          <Collapse accordion defaultActiveKey="1">
-            <Panel header="Available Data" key="1">
-              <AvailableData />
-            </Panel>
+          <Collapse accordion key={mainKeys}>
             <Panel header="Use a key now" key="2">
               <StartUnlock />
             </Panel>
-            <Panel header="Store remote key for later" key="4.4">
+            <Panel header="Store a remote key for later" key="4.4">
               <StoreForTemp />
             </Panel>
-            <Panel header="Share a remote key from before" key="4.5">
+            <Panel header="Share a remote key using code" key="4.5">
               <ShareTemp />
             </Panel>
             <Panel header="Unlock using shared code" key="4.6">
