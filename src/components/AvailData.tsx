@@ -12,9 +12,11 @@ import { fetchFinishUnlock } from "../api/api-def";
 
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
+import totp from "totp-generator";
 
 import { default as prettyms } from "pretty-ms";
 import { CEmoji } from "./CEmoji";
+import { getQR } from "./ShareOrForget";
 const { Title, Text, Paragraph } = Typography;
 
 export function SimpleEmpty() {
@@ -31,10 +33,25 @@ type setReact = (alert: AlertMessage, data: string, deleteCB: simpleCB) => void;
 
 const isLink = (e) => e.startsWith("http://") || e.startsWith("https://");
 const isImage = (e) => e.startsWith("[img]") && e.endsWith("[/img]");
+const isTOTP = (e) => e.startsWith("[totp]") && e.endsWith("[/totp]");
+const isQR = (e) => e.startsWith("[qr]") && e.endsWith("[/qr]");
 
 const redactCopy = (txt) => {
   // not really stopping anyone, just to avoid copy secret on mistake
-  return txt.replace(/\[img\].*?\[\/img\]/g, "<IMAGE>");
+  return txt
+    .replace(/\[img\].*?\[\/img\]/g, "<IMAGE>")
+    .replace(/\[totp\].*?\[\/totp\]/g, "<TOTP>")
+    .replace(/\[qr\].*?\[\/qr\]/g, "<QR CODE>");
+};
+
+const AsyncImage = (props: { getSrc: Promise<string> }) => {
+  const [src, setSrc] = React.useState("");
+  React.useEffect(() => {
+    props.getSrc.then((e) => setSrc(e));
+  });
+  return (
+    <img src={src} alt="qr-code" style={!src ? { height: 0, width: 0 } : {}} />
+  );
 };
 
 export function TextEffects(props: { text: string }) {
@@ -60,8 +77,23 @@ export function TextEffects(props: { text: string }) {
               key={e + i}
             />
           );
+        } else if (isTOTP(e)) {
+          let totpStr = e.match(/\[totp\]([a-zA-Z0-9]+?)\[\/totp\]/)[1];
+          return (
+            <>
+              <Text code>{totp(totpStr).toString().split("").join(" ")}</Text>{" "}
+            </>
+          );
+        } else if (isQR(e)) {
+          let qrData = e.match(/\[qr\](.+?)\[\/qr\]/)[1];
+
+          return (
+            <>
+              <AsyncImage getSrc={getQR(qrData)} />
+            </>
+          );
         } else {
-          return <>{e} </>;
+          return <>{e}&nbsp;</>;
         }
       })}
     </>
@@ -99,11 +131,11 @@ export function ShowOrDelete(props: {
     }
 
     setCloseTimeout(
-      setTimeout(() => {
+      (setTimeout(() => {
         setModalData("");
         setAlertMsg(["error", ""]);
         setModalVisible(false);
-      }, 15 * 1000) as unknown as number
+      }, 15 * 1000) as unknown) as number
     );
     setModalVisible(true);
   };
