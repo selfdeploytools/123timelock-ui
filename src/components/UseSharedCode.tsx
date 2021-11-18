@@ -58,8 +58,12 @@ export function UseSharedCode() {
             AddToAlertList(
               ALERT_LIST_NAME,
               "success",
-              `Stored key ${key.id} for later!`
+              `Added ${locked.desc} to the unlocked queue1`
             );
+            setSelectedLocked(null);
+            setSelectedSaltKey(null);
+            setTimeCode("");
+            setShareCode("");
           } catch (error) {
             AddToAlertList(
               ALERT_LIST_NAME,

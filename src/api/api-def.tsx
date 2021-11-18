@@ -195,13 +195,13 @@ export const fetchUnloackWithFast = async (
       to: number;
       proof: string;
     };
-  } = await fastGET("/temp/fastcopy", {
+  } = await fastGET("/temp/unlock", {
     token,
     salt,
     mindiff,
     fastproof,
     enckey
   });
-  console.log("/temp/fastcopy", result);
+  console.log("/temp/unlock", result);
   return result;
 };
