@@ -39,7 +39,7 @@ export function ToggleDarkMode() {
   const [theme, setStrTheme] = React.useState(getTheme() as Theme);
   useEffect(() => {
     if (theme === "dark") setTheme("dark");
-  });
+  }, []);
   return (
     <Switch
       checkedChildren="🌘 Dark Mode"

@@ -109,7 +109,7 @@ const SecretMessage = (props: {
           />
         </li>
         <li>
-          <Text code>{result}</Text>
+          <Text style={{ wordBreak: "break-all" }}>{result}</Text>
         </li>
         <li>
           <Paragraph
@@ -221,7 +221,7 @@ export function ShowOrDelete(props: {
         setModalData("");
         setAlertMsg(["error", ""]);
         setModalVisible(false);
-      }, 15 * 1000) as unknown) as number
+      }, 25 * 1000) as unknown) as number
     );
     setModalVisible(true);
   };
