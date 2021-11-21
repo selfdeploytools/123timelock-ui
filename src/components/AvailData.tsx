@@ -1,6 +1,15 @@
 import * as React from "react";
 
-import { Button, Divider, Modal, Typography, Space } from "antd";
+import {
+  Button,
+  Divider,
+  Modal,
+  Typography,
+  Space,
+  Input,
+  Row,
+  Col
+} from "antd";
 
 import { CheckOutlined, CopyOutlined, DeleteOutlined } from "@ant-design/icons";
 
@@ -12,7 +21,7 @@ import { fetchFinishUnlock } from "../api/api-def";
 
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
-import { authenticator } from 'otplib';
+import { authenticator } from "otplib";
 
 import { default as prettyms } from "pretty-ms";
 import { CEmoji } from "./CEmoji";
@@ -35,13 +44,32 @@ const isLink = (e) => e.startsWith("http://") || e.startsWith("https://");
 const isImage = (e) => e.startsWith("[img]") && e.endsWith("[/img]");
 const isTOTP = (e) => e.startsWith("[totp]") && e.endsWith("[/totp]");
 const isQR = (e) => e.startsWith("[qr]") && e.endsWith("[/qr]");
+const isHASH256 = (e) => e.startsWith("[sha256]") && e.endsWith("[/sha256]");
+
+async function sha256(message: string): Promise<string> {
+  // encode as UTF-8
+  const msgBuffer = new TextEncoder().encode(message);
+
+  // hash the message
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+
+  // convert ArrayBuffer to Array
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  // convert bytes to hex string
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex;
+}
 
 const redactCopy = (txt) => {
   // not really stopping anyone, just to avoid copy secret on mistake
   return txt
     .replace(/\[img\].*?\[\/img\]/g, "<IMAGE>")
     .replace(/\[totp\].*?\[\/totp\]/g, "<TOTP>")
-    .replace(/\[qr\].*?\[\/qr\]/g, "<QR CODE>");
+    .replace(/\[qr\].*?\[\/qr\]/g, "<QR CODE>")
+    .replace(/\[sha256\].*?\[\/sha256\]/g, "<HASH256 CODE>");
 };
 
 const AsyncImage = (props: { getSrc: Promise<string> }) => {
@@ -51,6 +79,53 @@ const AsyncImage = (props: { getSrc: Promise<string> }) => {
   });
   return (
     <img src={src} alt="qr-code" style={!src ? { height: 0, width: 0 } : {}} />
+  );
+};
+
+const SecretMessage = (props: {
+  sharedSecret: string;
+  cb: (string) => Promise<string>;
+}) => {
+  const [result, setResult] = React.useState(
+    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+  );
+  const [input, setInput] = React.useState("");
+  return (
+    <>
+      Enter code:
+      <ul>
+        <li>
+          <Input
+            placeholder="Enter the code here"
+            value={input}
+            onChange={(e) => {
+              let txt = e.target.value;
+              setInput(txt);
+              props
+                .cb(props.sharedSecret + txt)
+                .then((e) => setResult(e))
+                .catch((e) => setResult(`Error: ${e}`));
+            }}
+          />
+        </li>
+        <li>
+          <Text code>{result}</Text>
+        </li>
+        <li>
+          <Paragraph
+            copyable={{
+              icon: [
+                <CopyOutlined style={{ fontSize: "2em" }} key="copy-icon" />,
+                <CheckOutlined style={{ fontSize: "2em" }} key="copied-icon" />
+              ],
+              text: result
+            }}
+          >
+            Copy Result
+          </Paragraph>
+        </li>
+      </ul>
+    </>
   );
 };
 
@@ -81,7 +156,18 @@ export function TextEffects(props: { text: string }) {
           let totpStr = e.match(/\[totp\]([a-zA-Z0-9]+?)\[\/totp\]/)[1];
           return (
             <>
-              <Text code>{authenticator.generate(totpStr).split("").join(" ")}</Text>{" "}
+              <Text code>
+                {authenticator.generate(totpStr).split("").join(" ")}
+              </Text>{" "}
+            </>
+          );
+        } else if (isHASH256(e)) {
+          let hashSahredSecret = (e.match(
+            /\[sha256\]([^\s]+?)\[\/sha256\]/
+          ) || ["", ""])[1];
+          return (
+            <>
+              <SecretMessage sharedSecret={hashSahredSecret} cb={sha256} />
             </>
           );
         } else if (isQR(e)) {

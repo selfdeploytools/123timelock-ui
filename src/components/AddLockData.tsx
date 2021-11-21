@@ -150,7 +150,9 @@ export function AddLockData() {
         />
         <span>
           <b>2. </b> Enter data here (you can copy row by row later): <br />
-          <sub>You can use [img] [totp] and [qr] with ending tag [/...]</sub>
+          <sub>
+            You can use [img] [totp] [qr] and [sha256] with ending tag [/...]
+          </sub>
         </span>
         <TextArea
           dir="auto"
