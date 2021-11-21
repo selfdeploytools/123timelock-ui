@@ -12,7 +12,7 @@ import { fetchFinishUnlock } from "../api/api-def";
 
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
-import totp from "totp-generator";
+import { authenticator } from 'otplib';
 
 import { default as prettyms } from "pretty-ms";
 import { CEmoji } from "./CEmoji";
@@ -81,7 +81,7 @@ export function TextEffects(props: { text: string }) {
           let totpStr = e.match(/\[totp\]([a-zA-Z0-9]+?)\[\/totp\]/)[1];
           return (
             <>
-              <Text code>{totp(totpStr).toString().split("").join(" ")}</Text>{" "}
+              <Text code>{authenticator.generate(totpStr).split("").join(" ")}</Text>{" "}
             </>
           );
         } else if (isQR(e)) {
