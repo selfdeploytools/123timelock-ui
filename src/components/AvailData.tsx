@@ -85,6 +85,7 @@ const AsyncImage = (props: { getSrc: Promise<string> }) => {
 const SecretMessage = (props: {
   sharedSecret: string;
   cb: (string) => Promise<string>;
+  unlock: UnlockDef;
 }) => {
   const [result, setResult] = React.useState(
     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
@@ -129,7 +130,7 @@ const SecretMessage = (props: {
   );
 };
 
-export function TextEffects(props: { text: string }) {
+export function TextEffects(props: { text: string; unlock: UnlockDef }) {
   return (
     <>
       {props.text.split(" ").map((e, i) => {
@@ -167,7 +168,11 @@ export function TextEffects(props: { text: string }) {
           ) || ["", ""])[1];
           return (
             <>
-              <SecretMessage sharedSecret={hashSahredSecret} cb={sha256} />
+              <SecretMessage
+                sharedSecret={hashSahredSecret}
+                cb={sha256}
+                unlock={props.unlock}
+              />
             </>
           );
         } else if (isQR(e)) {
@@ -201,6 +206,8 @@ export function ShowOrDelete(props: {
   const [modalData, setModalData] = React.useState("");
 
   const [closeTimeout, setCloseTimeout] = React.useState(-1);
+
+  const [selectedUnlock, setSelectedUnlock] = React.useState(null as UnlockDef);
 
   const customCallback = (
     alert: AlertMessage,
@@ -291,7 +298,7 @@ export function ShowOrDelete(props: {
                     }}
                     key={l + i}
                   >
-                    <TextEffects text={l} />
+                    <TextEffects text={l} unlock={selectedUnlock} />
 
                     <Paragraph
                       copyable={{
@@ -324,6 +331,7 @@ export function ShowOrDelete(props: {
               danger={props.btnDanger}
               key={[i, u.desc].toString()}
               onClick={() => {
+                setSelectedUnlock(u);
                 props.callback(u, customCallback);
               }}
             >
