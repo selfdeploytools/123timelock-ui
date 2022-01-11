@@ -1,6 +1,14 @@
 import * as React from "react";
 import * as encryptor from "simple-encryptor";
-import { Alert, Button, Checkbox, Input, Space } from "antd";
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Collapse,
+  Input,
+  Space,
+  Typography
+} from "antd";
 
 import { uuidv4 } from "../utils/utils";
 import { Group, fetchEncPass, fetchEncHash } from "../api/api-def";
@@ -13,6 +21,8 @@ import { useAppDispatch, useAppSelector } from "../redux/store";
 import { BoldTime } from "./BoldTime";
 import { ShowOrDelete } from "./AvailData";
 
+const { Panel } = Collapse;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 export const SHA_DELIM = "`~SHA~`";
@@ -175,10 +185,55 @@ export function AddLockData() {
           }}
         />
         <span>
-          <b>2. </b> Enter data here (you can copy row by row later): <br />
-          <sub>
-            You can use [img] [totp] [qr] and [sha256] with ending tag [/...]
-          </sub>
+          <b>2. </b> Enter data here: <br />
+          <Collapse>
+            <Panel header="ℹ Formatting tips" key="-1">
+              <ul style={{ paddingLeft: "10px" }}>
+                <li style={{ marginBottom: "10px" }}>
+                  You can copy row by row after.{" "}
+                </li>
+                <li style={{ marginBottom: "10px" }}>
+                  Links works out of the box - <b>http(s)://.../</b>
+                </li>
+                <li style={{ marginBottom: "10px" }}>
+                  You can use <b>[img] [totp] [qr]</b> and <b>[sha256]</b> with
+                  ending tag <b>[/...]</b>
+                </li>
+                <li style={{ marginBottom: "10px" }}>
+                  Multi step, server backed, hash - <b> [sha256p], [sha1p] </b>{" "}
+                  like:
+                  <Text
+                    code
+                    copyable={{
+                      text: "[sha256p]aaaa::`~SHA~`bbbb`~SHA~`::cccc[/sha256p]"
+                    }}
+                  >
+                    [sha256p]aaaa
+                    <Text mark>
+                      ::`~SHA~`<b>bbbb</b>`~SHA~`::
+                    </Text>
+                    cccc[/sha256p]
+                  </Text>{" "}
+                  where <Text code>bbbb</Text> will be used only on the server
+                  side
+                </li>
+                <li style={{ marginBottom: "10px" }}>
+                  Multi step, Server backed, totp
+                  <b> [totp2] </b> tags with:
+                  <Text
+                    code
+                    copyable={{ text: "[totp2]`~MAC~`TOTP_CODE`~MAC~`[totp2]" }}
+                  >
+                    [totp2]
+                    <Text mark>
+                      `~MAC~`<b>TOTP_CODE</b>`~MAC~`
+                    </Text>
+                    [totp2]
+                  </Text>
+                </li>
+              </ul>
+            </Panel>
+          </Collapse>
         </span>
         <TextArea
           dir="auto"
@@ -194,7 +249,7 @@ export function AddLockData() {
           unlocksArray={[{ desc: "Preview Data" }]}
           timecalc={() => 0}
           callback={(u, set) => {
-            set(null, data, () => {});
+            set(["error", ""], data, () => {});
           }}
           btnType="primary"
           btnDanger={false}
