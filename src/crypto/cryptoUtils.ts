@@ -17,7 +17,7 @@ export function hashStep(text, type = "sha256", state = null) {
 }
 
 export function hashFinalStep(
-  text: string,
+  text: string | null,
   type = "sha256",
   state?: string
 ): string {
@@ -25,7 +25,7 @@ export function hashFinalStep(
   if (state) {
     hash.import(state);
   }
-  hash.update(text);
+  if (text) hash.update(text);
   let uint32_arr = hash.finalize() as Array<number>;
   return sjcl.codec.hex.fromBits(uint32_arr);
 }

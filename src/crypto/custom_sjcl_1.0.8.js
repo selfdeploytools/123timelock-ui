@@ -5432,6 +5432,17 @@ sjcl.hash.sha1.prototype = {
     return this;
   },
 
+  export: function () {
+    return JSON.stringify([this._h, this._buffer, this._length]);
+  },
+
+  import: function (data) {
+    var _data = JSON.parse(data);
+    this._h = _data[0];
+    this._buffer = _data[1];
+    this._length = _data[2];
+  },
+
   /**
    * Input several words to the hash.
    * @param {bitArray|String} data the data to hash.

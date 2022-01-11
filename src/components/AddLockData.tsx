@@ -69,6 +69,7 @@ export function AddLockData() {
         } else {
           try {
             let dataparts = data.split(SHA_DELIM);
+            // Splitting text where prefix=postfix, we can just use odd,even
             let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
             let hashparts = dataparts.filter((e, i) => i % 2 === 1);
             fetchEncHash(hashparts, randomPass)
@@ -79,7 +80,10 @@ export function AddLockData() {
                 let dataWithHashparts = dataStripped
                   .map((e, i) =>
                     i !== dataStripped.length - 1
-                      ? e + encrHashParts.data.encparts[i]
+                      ? e +
+                        (hashparts[i].length > 0 // real hash and not end\start element
+                          ? encrHashParts.data.encparts[i]
+                          : "")
                       : e
                   )
                   .join("");

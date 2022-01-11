@@ -23,6 +23,8 @@ import { useAppDispatch, useAppSelector } from "../redux/store";
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
 import { authenticator } from "otplib";
 
+import { TextEffects, redactCopy, isRedacted } from "./DataTextEffects";
+
 import { default as prettyms } from "pretty-ms";
 import { CEmoji } from "./CEmoji";
 import { getQR } from "./ShareOrForget";
@@ -39,157 +41,6 @@ export function SimpleEmpty() {
 type simpleCB = () => void;
 type AlertMessage = [AlertType, string];
 type setReact = (alert: AlertMessage, data: string, deleteCB: simpleCB) => void;
-
-const isLink = (e) => e.startsWith("http://") || e.startsWith("https://");
-const isImage = (e) => e.startsWith("[img]") && e.endsWith("[/img]");
-const isTOTP = (e) => e.startsWith("[totp]") && e.endsWith("[/totp]");
-const isQR = (e) => e.startsWith("[qr]") && e.endsWith("[/qr]");
-const isHASH256 = (e) => e.startsWith("[sha256]") && e.endsWith("[/sha256]");
-
-async function sha256(message: string): Promise<string> {
-  // encode as UTF-8
-  const msgBuffer = new TextEncoder().encode(message);
-
-  // hash the message
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-
-  // convert ArrayBuffer to Array
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-  // convert bytes to hex string
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return hashHex;
-}
-
-const redactCopy = (txt) => {
-  // not really stopping anyone, just to avoid copy secret on mistake
-  return txt
-    .replace(/\[img\].*?\[\/img\]/g, "<IMAGE>")
-    .replace(/\[totp\].*?\[\/totp\]/g, "<TOTP>")
-    .replace(/\[qr\].*?\[\/qr\]/g, "<QR CODE>")
-    .replace(/\[sha256\].*?\[\/sha256\]/g, "<HASH256 CODE>");
-};
-
-const AsyncImage = (props: { getSrc: Promise<string> }) => {
-  const [src, setSrc] = React.useState("");
-  React.useEffect(() => {
-    props.getSrc.then((e) => setSrc(e));
-  });
-  return (
-    <img src={src} alt="qr-code" style={!src ? { height: 0, width: 0 } : {}} />
-  );
-};
-
-const SecretMessage = (props: {
-  sharedSecret: string;
-  cb: (string) => Promise<string>;
-  unlock: UnlockDef;
-}) => {
-  const [result, setResult] = React.useState(
-    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-  );
-  const [input, setInput] = React.useState("");
-  return (
-    <>
-      Enter code:
-      <ul>
-        <li>
-          <Input
-            placeholder="Enter the code here"
-            value={input}
-            onChange={(e) => {
-              let txt = e.target.value;
-              setInput(txt);
-              props
-                .cb(props.sharedSecret + txt)
-                .then((e) => setResult(e))
-                .catch((e) => setResult(`Error: ${e}`));
-            }}
-          />
-        </li>
-        <li>
-          <Text style={{ wordBreak: "break-all" }}>{result}</Text>
-        </li>
-        <li>
-          <Paragraph
-            copyable={{
-              icon: [
-                <CopyOutlined style={{ fontSize: "2em" }} key="copy-icon" />,
-                <CheckOutlined style={{ fontSize: "2em" }} key="copied-icon" />
-              ],
-              text: result
-            }}
-          >
-            Copy Result
-          </Paragraph>
-        </li>
-      </ul>
-    </>
-  );
-};
-
-export function TextEffects(props: { text: string; unlock: UnlockDef }) {
-  return (
-    <>
-      {props.text.split(" ").map((e, i) => {
-        if (isLink(e)) {
-          return (
-            <a target="_blank" rel="noreferrer" href={e} key={e + i}>
-              {e}{" "}
-            </a>
-          );
-        } else if (isImage(e)) {
-          let link = encodeURI(e.match(/\[img\](.*?)\[\/img\]/)[1]);
-          if (!isLink(link)) {
-            return <>Invalid Image link </>;
-          }
-          return (
-            <img
-              style={{ width: "100%" }}
-              src={link}
-              alt="Secret"
-              key={e + i}
-            />
-          );
-        } else if (isTOTP(e)) {
-          let totpStr = e.match(/\[totp\]([a-zA-Z0-9]+?)\[\/totp\]/)[1];
-          return (
-            <>
-              <Text code>
-                {authenticator.generate(totpStr).split("").join(" ")}
-              </Text>{" "}
-            </>
-          );
-        } else if (isHASH256(e)) {
-          let hashSahredSecret = (e.match(
-            /\[sha256\]([^\s]+?)\[\/sha256\]/
-          ) || ["", ""])[1];
-          return (
-            <>
-              <SecretMessage
-                sharedSecret={hashSahredSecret}
-                cb={sha256}
-                unlock={props.unlock}
-              />
-            </>
-          );
-        } else if (isQR(e)) {
-          let qrData = e.match(/\[qr\](.+?)\[\/qr\]/)[1];
-
-          return (
-            <>
-              <AsyncImage getSrc={getQR(qrData)} />
-            </>
-          );
-        } else {
-          return <>{e}&nbsp;</>;
-        }
-      })}
-    </>
-  );
-}
 
 export function ShowOrDelete(props: {
   deleteOnly: boolean;
@@ -300,21 +151,25 @@ export function ShowOrDelete(props: {
                   >
                     <TextEffects text={l} unlock={selectedUnlock} />
 
-                    <Paragraph
-                      copyable={{
-                        text: redactCopy(l),
-                        icon: [
-                          <CopyOutlined
-                            style={{ fontSize: "2em" }}
-                            key="copy-icon"
-                          />,
-                          <CheckOutlined
-                            style={{ fontSize: "2em" }}
-                            key="copied-icon"
-                          />
-                        ]
-                      }}
-                    ></Paragraph>
+                    {!isRedacted(l) ? (
+                      <></>
+                    ) : (
+                      <Paragraph
+                        copyable={{
+                          text: redactCopy(l),
+                          icon: [
+                            <CopyOutlined
+                              style={{ fontSize: "2em" }}
+                              key="copy-icon"
+                            />,
+                            <CheckOutlined
+                              style={{ fontSize: "2em" }}
+                              key="copied-icon"
+                            />
+                          ]
+                        }}
+                      ></Paragraph>
+                    )}
                   </div>
                   <Divider key={l + i + "|1"} />
                 </>

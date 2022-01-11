@@ -153,7 +153,7 @@ export const fetchFinishUnlock = async (
     hashstate,
     hashsecret
   });
-  console.log("/unlock/finish", result);
+  console.log("/unlock/finish", { err: result.err }); // redact pass
   return result;
 };
 
