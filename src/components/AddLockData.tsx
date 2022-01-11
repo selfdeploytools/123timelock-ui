@@ -3,7 +3,7 @@ import * as encryptor from "simple-encryptor";
 import { Alert, Button, Checkbox, Input, Space } from "antd";
 
 import { uuidv4 } from "../utils/utils";
-import { Group, fetchEncPass } from "../api/api-def";
+import { Group, fetchEncPass, fetchEncHash } from "../api/api-def";
 
 import { AlertType, ResultAlert } from "./ResultAlert";
 import { MobileDataHelperModal } from "../components/MobileDataHelperModal";
@@ -14,6 +14,8 @@ import { BoldTime } from "./BoldTime";
 import { ShowOrDelete } from "./AvailData";
 
 const { TextArea } = Input;
+
+export const SHA_DELIM = "`~SHA~`";
 
 export function AddLockData() {
   const dispath = useAppDispatch();
@@ -66,37 +68,57 @@ export function AddLockData() {
           return;
         } else {
           try {
-            const dataEncrypted = encryptor
-              .createEncryptor(randomPass)
-              .encrypt(data);
+            let dataparts = data.split(SHA_DELIM);
+            let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
+            let hashparts = dataparts.filter((e, i) => i % 2 === 1);
+            fetchEncHash(hashparts, randomPass)
+              .then((encrHashParts) => {
+                if (!!result.err)
+                  throw new Error("Fetch hashparts, " + result.err);
 
-            if (
-              !result ||
-              !result.data ||
-              !result.data.enckey ||
-              result.data.enckey.length !== selectedKeysSalt.length
-            ) {
-              addAlert("error", "Can't read encryption result");
-            } else {
-              dispath(
-                addLockedData({
-                  desc: name,
-                  encData: dataEncrypted,
-                  availablePass: selectedKeysSalt.map((salt, i) => ({
-                    encPass: result.data.enckey[i],
-                    keySalt: value2salt(salt)
-                  }))
-                })
-              );
-              // clear data of this
-              setData("");
-              setName("");
+                let dataWithHashparts = dataStripped
+                  .map((e, i) =>
+                    i !== dataStripped.length - 1
+                      ? e + encrHashParts.data.encparts[i]
+                      : e
+                  )
+                  .join("");
 
-              addAlert(
-                "success",
-                `Data was saved sucessfully! (${result.data.enckey.length} keys)`
-              );
-            }
+                const dataEncrypted = encryptor
+                  .createEncryptor(randomPass)
+                  .encrypt(dataWithHashparts);
+
+                if (
+                  !result ||
+                  !result.data ||
+                  !result.data.enckey ||
+                  result.data.enckey.length !== selectedKeysSalt.length
+                ) {
+                  addAlert("error", "Can't read encryption result");
+                } else {
+                  dispath(
+                    addLockedData({
+                      desc: name,
+                      encData: dataEncrypted,
+                      availablePass: selectedKeysSalt.map((salt, i) => ({
+                        encPass: result.data.enckey[i],
+                        keySalt: value2salt(salt)
+                      }))
+                    })
+                  );
+                  // clear data of this
+                  setData("");
+                  setName("");
+
+                  addAlert(
+                    "success",
+                    `Data was saved sucessfully! (${result.data.enckey.length} keys)`
+                  );
+                }
+              })
+              .catch((e) => {
+                addAlert("error", `Error fetching hashparts: ${e}`);
+              });
             //result.data.enckey
           } catch (error) {
             addAlert("error", `Error encrypting: '${error}'`);

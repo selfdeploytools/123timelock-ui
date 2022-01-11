@@ -88,6 +88,17 @@ export const fetchEncPass = async (salts: string[], pass: string) => {
   return result;
 };
 
+export const fetchEncHash = async (hashparts: string[], pass: string) => {
+  const result: {
+    err?: string;
+    data: {
+      encparts: string[];
+    };
+  } = await fastGET("/enchash", { hashparts, pass });
+  console.log("/enchash", result);
+  return result;
+};
+
 export const fetchStartUnlock = async (
   encPass: string,
   keySalt: string,
@@ -120,20 +131,27 @@ export const fetchFinishUnlock = async (
   from: number,
   to: number,
   salt: string,
-  proof: string
+  proof: string,
+  hashtype?: string,
+  hashstate?: string,
+  hashsecret?: string
 ) => {
   const result: {
     err?: string;
     data: {
       pass: string;
       timeLeftOpen: string;
+      hashstep: string;
     };
   } = await fastGET("/unlock/finish", {
     enckey: encPass,
     from: from.toString(),
     to: to.toString(),
     proof,
-    salt
+    salt,
+    hashtype,
+    hashstate,
+    hashsecret
   });
   console.log("/unlock/finish", result);
   return result;

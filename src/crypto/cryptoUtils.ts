@@ -1,21 +1,14 @@
 import * as sjcl from "./custom_sjcl_1.0.8";
 
-export function hash256(text: string): string {
-  let hash = new sjcl.hash.sha256();
+export function hash(text: string, type = "sha256"): string {
+  let hash = type === "sha256" ? new sjcl.hash.sha256() : new sjcl.hash.sha1();
   hash.update(text);
   let uint32_arr = hash.finalize() as Array<number>;
   return sjcl.codec.hex.fromBits(uint32_arr);
 }
 
-export function gen(count: number) {
-  return new Array(count)
-    .fill(0)
-    .map((e, i) => (i % 10).toString(10))
-    .join("");
-}
-
-export function hash256Step(text: string, state?: string): string {
-  let hash = new sjcl.hash.sha256();
+export function hashStep(text, type = "sha256", state = null) {
+  let hash = type === "sha256" ? new sjcl.hash.sha256() : new sjcl.hash.sha1();
   if (state) {
     hash.import(state);
   }
@@ -23,8 +16,12 @@ export function hash256Step(text: string, state?: string): string {
   return hash.export();
 }
 
-export function hash256FinalStep(text: string, state?: string): string {
-  let hash = new sjcl.hash.sha256();
+export function hashFinalStep(
+  text: string,
+  type = "sha256",
+  state?: string
+): string {
+  let hash = type === "sha256" ? new sjcl.hash.sha256() : new sjcl.hash.sha1();
   if (state) {
     hash.import(state);
   }
