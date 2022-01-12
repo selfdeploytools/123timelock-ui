@@ -3450,6 +3450,29 @@ sjcl.misc.hkdf = function (ikm, keyBitLength, salt, info, Hash) {
  * @param {bitArray} key the key for HMAC.
  * @param {Object} [Hash=sjcl.hash.sha256] The hash function to use.
  */
+
+sjcl.misc.hmacKeys = function (key, Hash) {
+  this._hash = Hash = Hash || sjcl.hash.sha256;
+  var exKey = [[], []],
+    i,
+    bs = Hash.prototype.blockSize / 32;
+  this._baseHash = [new Hash(), new Hash()];
+
+  if (key.length > bs) {
+    key = Hash.hash(key);
+  }
+
+  for (i = 0; i < bs; i++) {
+    exKey[0][i] = key[i] ^ 0x36363636;
+    exKey[1][i] = key[i] ^ 0x5c5c5c5c;
+  }
+
+  return {
+    serverKey: exKey[1],
+    clientKey: exKey[0]
+  };
+};
+
 sjcl.misc.hmac = function (key, Hash) {
   this._hash = Hash = Hash || sjcl.hash.sha256;
   var exKey = [[], []],
