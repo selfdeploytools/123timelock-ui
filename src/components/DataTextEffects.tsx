@@ -171,7 +171,7 @@ const SecretMessageParts = (props: {
             <Button
               type="primary"
               onClick={(e) => {
-                CalculateHash(props.sharedSecret + input)
+                CalculateHash(input + props.sharedSecret)
                   .then((e) => setResult(e))
                   .catch((e) => setResult(`Error: ${e}`));
               }}

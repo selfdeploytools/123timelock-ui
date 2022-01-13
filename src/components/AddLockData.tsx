@@ -26,6 +26,7 @@ const { Text } = Typography;
 const { TextArea } = Input;
 
 export const SHA_DELIM = "`~SHA~`";
+export const MAC_DELIM = "`~MAC~`";
 
 export function AddLockData() {
   const dispath = useAppDispatch();
@@ -62,86 +63,84 @@ export function AddLockData() {
   let key2value = (k: KeyDef) => k.keySalt + "|" + k.id;
   let value2salt = (v: string) => v.split("|")[0];
 
-  const startLockDataProcess = () => {
+  const startLockDataProcess = async () => {
     if (locked.filter((e) => e.desc === name).length > 0) {
       addAlert("info", `Entry with '${name}' already exist!`);
       return;
     }
     let randomPass = uuidv4();
-    fetchEncPass(
+    let result = (await fetchEncPass(
       selectedKeysSalt.map((e) => value2salt(e)),
       randomPass
-    )
-      .then((result) => {
-        if (!!result.err) {
-          addAlert("error", `${result.err || "<empty error>"}`);
-          return;
-        } else {
-          try {
-            let dataparts = data.split(SHA_DELIM);
-            // Splitting text where prefix=postfix, we can just use odd,even
-            let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
-            let hashparts = dataparts.filter((e, i) => i % 2 === 1);
-            fetchEncHash(hashparts, randomPass)
-              .then((encrHashParts) => {
-                if (!!result.err)
-                  throw new Error("Fetch hashparts, " + result.err);
+    ).catch((e) => {
+      addAlert("error", `Error fetching: ${e}`);
+    })) || { err: "void" };
 
-                let dataWithHashparts = dataStripped
-                  .map((e, i) =>
-                    i !== dataStripped.length - 1
-                      ? e +
-                        (hashparts[i].length > 0 // real hash and not end\start element
-                          ? encrHashParts.data.encparts[i]
-                          : "")
-                      : e
-                  )
-                  .join("");
+    if (!!result.err) {
+      addAlert("error", `${result.err || "<empty error>"}`);
+      return;
+    } else {
+      try {
+        let dataparts = data.split(SHA_DELIM);
+        // Splitting text where prefix=postfix, we can just use odd,even
+        let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
+        let hashparts = dataparts.filter((e, i) => i % 2 === 1);
 
-                const dataEncrypted = encryptor
-                  .createEncryptor(randomPass)
-                  .encrypt(dataWithHashparts);
+        fetchEncHash(hashparts, randomPass)
+          .then((encrHashParts) => {
+            if (!!result.err) throw new Error("Fetch hashparts, " + result.err);
 
-                if (
-                  !result ||
-                  !result.data ||
-                  !result.data.enckey ||
-                  result.data.enckey.length !== selectedKeysSalt.length
-                ) {
-                  addAlert("error", "Can't read encryption result");
-                } else {
-                  dispath(
-                    addLockedData({
-                      desc: name,
-                      encData: dataEncrypted,
-                      availablePass: selectedKeysSalt.map((salt, i) => ({
-                        encPass: result.data.enckey[i],
-                        keySalt: value2salt(salt)
-                      }))
-                    })
-                  );
-                  // clear data of this
-                  setData("");
-                  setName("");
+            let dataWithHashparts = dataStripped
+              .map((e, i) =>
+                i !== dataStripped.length - 1
+                  ? e +
+                    (hashparts[i].length > 0 // real hash and not end\start element
+                      ? encrHashParts.data.encparts[i]
+                      : "")
+                  : e
+              )
+              .join("");
 
-                  addAlert(
-                    "success",
-                    `Data was saved sucessfully! (${result.data.enckey.length} keys)`
-                  );
-                }
-              })
-              .catch((e) => {
-                addAlert("error", `Error fetching hashparts: ${e}`);
-              });
-            //result.data.enckey
-          } catch (error) {
-            addAlert("error", `Error encrypting: '${error}'`);
-          }
-        }
-      })
-      .catch((e) => {
-        addAlert("error", `Error fetching: ${e}`);
-      });
+            const dataEncrypted = encryptor
+              .createEncryptor(randomPass)
+              .encrypt(dataWithHashparts);
+
+            if (
+              !result ||
+              !result.data ||
+              !result.data.enckey ||
+              result.data.enckey.length !== selectedKeysSalt.length
+            ) {
+              addAlert("error", "Can't read encryption result");
+            } else {
+              dispath(
+                addLockedData({
+                  desc: name,
+                  encData: dataEncrypted,
+                  availablePass: selectedKeysSalt.map((salt, i) => ({
+                    encPass: result.data.enckey[i],
+                    keySalt: value2salt(salt)
+                  }))
+                })
+              );
+              // clear data of this
+              setData("");
+              setName("");
+
+              addAlert(
+                "success",
+                `Data was saved sucessfully! (${result.data.enckey.length} keys)`
+              );
+            }
+          })
+          .catch((e) => {
+            addAlert("error", `Error fetching hashparts: ${e}`);
+          });
+        //result.data.enckey
+      } catch (error) {
+        addAlert("error", `Error encrypting: '${error}'`);
+      }
+    }
   };
 
   return (

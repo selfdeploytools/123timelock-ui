@@ -188,6 +188,42 @@ export const fetchFinishUnlockSha = async (
   return result;
 };
 
+export const fetchFinishUnlockOTP = async (
+  encPass: string,
+  from: number,
+  to: number,
+  salt: string,
+  proof: string,
+  hashtype: string,
+  hashstate: string,
+  hashsecret: string,
+  hashsextra: string
+) => {
+  const result: {
+    err?: string;
+    data: {
+      hashstep: string;
+    };
+  } = await fastGET("/unlock/finish", {
+    enckey: encPass,
+    from: from.toString(),
+    to: to.toString(),
+    proof,
+    salt,
+    mode: "otp-step",
+    hashtype,
+    hashstate,
+    hashsecret,
+    hashsextra
+  });
+  console.log("/unlock/finish (otp-step)", {
+    // redact pass
+    err: result.err,
+    data: result?.data?.hashstep
+  });
+  return result;
+};
+
 export const fetchCreateTemp = async (
   token: string,
   tokenproof: string,
