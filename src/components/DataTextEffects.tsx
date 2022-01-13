@@ -12,7 +12,7 @@ import {
 } from "antd";
 
 import { CheckOutlined, CopyOutlined, DeleteOutlined } from "@ant-design/icons";
-import { fetchFinishUnlock } from "../api/api-def";
+import { fetchFinishUnlockSha } from "../api/api-def";
 
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
 import { authenticator } from "otplib";
@@ -134,7 +134,7 @@ const SecretMessageParts = (props: {
         // client side:
         state = hashStep(part, props.hashType, state);
       } else {
-        let result = await fetchFinishUnlock(
+        let result = await fetchFinishUnlockSha(
           u.encPass,
           u.from,
           u.to,

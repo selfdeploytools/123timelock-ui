@@ -126,21 +126,47 @@ export const fetchStartUnlock = async (
   return result;
 };
 
-export const fetchFinishUnlock = async (
+export const fetchFinishUnlockSimple = async (
   encPass: string,
   from: number,
   to: number,
   salt: string,
-  proof: string,
-  hashtype?: string,
-  hashstate?: string,
-  hashsecret?: string
+  proof: string
 ) => {
   const result: {
     err?: string;
     data: {
       pass: string;
       timeLeftOpen: string;
+    };
+  } = await fastGET("/unlock/finish", {
+    enckey: encPass,
+    from: from.toString(),
+    to: to.toString(),
+    proof,
+    salt
+  });
+  console.log("/unlock/finish (simple)", {
+    // redact pass
+    err: result.err,
+    data: result?.data?.timeLeftOpen
+  });
+  return result;
+};
+
+export const fetchFinishUnlockSha = async (
+  encPass: string,
+  from: number,
+  to: number,
+  salt: string,
+  proof: string,
+  hashtype: string,
+  hashstate: string,
+  hashsecret: string
+) => {
+  const result: {
+    err?: string;
+    data: {
       hashstep: string;
     };
   } = await fastGET("/unlock/finish", {
@@ -149,11 +175,16 @@ export const fetchFinishUnlock = async (
     to: to.toString(),
     proof,
     salt,
+    mode: "sha-step",
     hashtype,
     hashstate,
     hashsecret
   });
-  console.log("/unlock/finish", { err: result.err }); // redact pass
+  console.log("/unlock/finish (sha-step)", {
+    // redact pass
+    err: result.err,
+    data: result?.data?.hashstep
+  });
   return result;
 };
 

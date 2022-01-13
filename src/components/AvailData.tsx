@@ -17,7 +17,7 @@ import * as encryptor from "simple-encryptor";
 
 import { AlertType, ResultAlert } from "../components/ResultAlert";
 
-import { fetchFinishUnlock } from "../api/api-def";
+import { fetchFinishUnlockSimple } from "../api/api-def";
 
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
@@ -222,7 +222,7 @@ export function AvailableData() {
 
   const unlockFinishProcess = (u: UnlockDef, setAlert: setReact) => {
     const delCB = () => deleteUnlock(u);
-    fetchFinishUnlock(u.encPass, u.from, u.to, u.keySalt, u.unlockProof)
+    fetchFinishUnlockSimple(u.encPass, u.from, u.to, u.keySalt, u.unlockProof)
       .then((result) => {
         if (!!result.err) {
           setAlert(["error", `${result.err || "<empty error>"}`], "", delCB);
