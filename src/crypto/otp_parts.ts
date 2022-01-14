@@ -153,9 +153,9 @@ export function decodeBase32Key(encoded: string) {
   return Array.from(Base32Decode(encoded));
 }
 
-export function getTimeData(steps = 30) {
+export function getTimeDataNumArray(steps = 30): number[] {
   var time = Math.floor(Date.now() / (steps * 1000));
-  var data = NumericToUint8Array(time);
+  var data = Array.from(NumericToUint8Array(time));
   return data;
 }
 
@@ -165,11 +165,14 @@ export function GenerateTOTPWithSign(signature) {
     if (signature) {
       var signatureArray = new Uint8Array(signature);
       var offset = signatureArray[signatureArray.length - 1] & 0xf;
+
       var binary =
         ((signatureArray[offset] & 0x7f) << 24) |
         ((signatureArray[offset + 1] & 0xff) << 16) |
         ((signatureArray[offset + 2] & 0xff) << 8) |
         (signatureArray[offset + 3] & 0xff);
+
+      console.log({ signature, signatureArray, offset, binary });
       return binary % 1000000;
     } else {
       console.error("Sign with HMAC - SHA-1: FAIL");

@@ -195,9 +195,8 @@ export const fetchFinishUnlockOTP = async (
   salt: string,
   proof: string,
   hashtype: string,
-  hashstate: string,
   hashsecret: string,
-  hashsextra: string
+  hashextra: string
 ) => {
   const result: {
     err?: string;
@@ -212,9 +211,8 @@ export const fetchFinishUnlockOTP = async (
     salt,
     mode: "otp-step",
     hashtype,
-    hashstate,
     hashsecret,
-    hashsextra
+    hashextra
   });
   console.log("/unlock/finish (otp-step)", {
     // redact pass
