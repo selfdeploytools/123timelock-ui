@@ -32,6 +32,36 @@ export type Group = {
 };
 
 // =============  API  ==============
+const safeB64Pairs: [string, RegExp][][] = [
+  // Including premaid regexes
+  [
+    ["+", /\+/g],
+    ["-", /-/g]
+  ],
+  [
+    ["/", /\//g],
+    ["_", /_/g]
+  ],
+  [
+    ["=", /=/g],
+    [".", /\./g]
+  ]
+];
+
+export function makeSafeB64_32(b64string: string) {
+  let result = b64string || "";
+  safeB64Pairs.forEach((p) => {
+    result = result.replace(p[0][1], p[1][0]);
+  });
+  return result;
+}
+export function undoSafeB64_32(b64string: string) {
+  let result = b64string || "";
+  safeB64Pairs.forEach((p) => {
+    result = result.replace(p[1][1], p[0][0]);
+  });
+  return result;
+}
 
 const SERVER_BASE =
   localStorage.getItem("SERVER_URL") ||
@@ -47,7 +77,7 @@ const fastGET = async (
       url += `&${k}=${v}`;
     } else {
       v.forEach((val) => {
-        url += `&${k}=${val}`;
+        url += `&${k}=${encodeURIComponent(val)}`;
       });
     }
   });
@@ -211,7 +241,7 @@ export const fetchFinishUnlockOTP = async (
     salt,
     mode: "otp-step",
     hashtype,
-    hashsecret,
+    hashsecret: makeSafeB64_32(hashsecret),
     hashextra
   });
   console.log("/unlock/finish (otp-step)", {

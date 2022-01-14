@@ -17,7 +17,7 @@ export function hashStep(text, type = "sha256", state = null) {
   return hash.export();
 }
 
-function hashFinalStepBits(
+function hashFinalStepBytes(
   text: string | number[] | null,
   type: string,
   state: string
@@ -36,14 +36,18 @@ export function hashFinalStep(
   type = "sha256",
   state?: string
 ): string {
-  let uint32_arr = hashFinalStepBits(text, type, state);
+  let uint32_arr = hashFinalStepBytes(text, type, state);
   return sjcl.codec.hex.fromBits(uint32_arr);
 }
 
 export function TOTP2Keys(secretBase32: string, type = "sha256") {
   try {
+    console.log("originalkey: " + sjcl.codec.base32.toBits(secretBase32));
     let hashAlgo = type === "sha256" ? sjcl.hash.sha256 : sjcl.hash.sha1;
-    let keys = sjcl.misc.hmacKeys(decodeBase32Key(secretBase32), hashAlgo) as {
+    let keys = sjcl.misc.hmacKeys(
+      sjcl.codec.base32.toBits(secretBase32),
+      hashAlgo
+    ) as {
       serverKey: number[];
       clientKey: number[];
     };
@@ -53,6 +57,15 @@ export function TOTP2Keys(secretBase32: string, type = "sha256") {
   }
 }
 
+const hex2FFarr = (text: string) => {
+  let finalHashBytesArray = [];
+  text.split("").forEach((_, i) => {
+    if (i % 2 === 0)
+      finalHashBytesArray.push(parseInt(text[i] + text[i + 1], 16));
+  });
+  return finalHashBytesArray;
+};
+
 export async function twoStepSha1Hmac(
   getKeyOut_server: (digest: number[]) => Promise<string>,
   keyIn_client,
@@ -60,15 +73,16 @@ export async function twoStepSha1Hmac(
 ): Promise<number[]> {
   let innerState = null;
   innerState = hashStep(keyIn_client, "sha1", innerState);
-  let innerDigest = hashFinalStepBits(code_int_arr, "sha1", innerState);
+  let innerDigest = hashFinalStepBytes(
+    sjcl.codec.bytes.fromBits(code_int_arr),
+    "sha1",
+    innerState
+  );
   let innerDigestLeft = innerDigest.slice(0, innerDigest.length / 2);
   let innerDigestRight = innerDigest.slice(innerDigest.length / 2);
   let keyOutState = await getKeyOut_server(innerDigestLeft);
   let finalHash = hashFinalStep(innerDigestRight, "sha1", keyOutState);
-  let finalHashBytesArray = [];
-  finalHash.split("").forEach((_, i) => {
-    if (i % 2 === 0)
-      finalHashBytesArray.push(parseInt(finalHash[i] + finalHash[i + 1], 16));
-  });
+  let finalHashBytesArray = hex2FFarr(finalHash);
+  console.log("sign", { finalHash, finalHashBytesArray });
   return finalHashBytesArray;
 }

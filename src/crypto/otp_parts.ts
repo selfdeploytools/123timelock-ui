@@ -156,6 +156,7 @@ export function decodeBase32Key(encoded: string) {
 export function getTimeDataNumArray(steps = 30): number[] {
   var time = Math.floor(Date.now() / (steps * 1000));
   var data = Array.from(NumericToUint8Array(time));
+  console.log("counter", time, data);
   return data;
 }
 
