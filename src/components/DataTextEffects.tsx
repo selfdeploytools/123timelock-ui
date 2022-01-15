@@ -12,13 +12,19 @@ import {
 } from "antd";
 
 import { CheckOutlined, CopyOutlined, DeleteOutlined } from "@ant-design/icons";
-import { fetchFinishUnlock } from "../api/api-def";
+import { fetchFinishUnlockOTP, fetchFinishUnlockSha } from "../api/api-def";
 
 import { delUnLockedData, UnlockDef } from "../redux/main-slice";
 import { authenticator } from "otplib";
 
 import { getQR } from "./ShareOrForget";
-import { hashFinalStep, hashStep } from "../crypto/cryptoUtils";
+import {
+  hashFinalStep,
+  hashStep,
+  twoStepSha1Hmac
+} from "../crypto/cryptoUtils";
+import { MAC_DELIM, SHA_DELIM } from "./AddLockData";
+import { GenerateTOTPWithSign, getTimeDataNumArray } from "../crypto/otp_parts";
 const { Title, Text, Paragraph } = Typography;
 
 const isLink = (e) => e.startsWith("http://") || e.startsWith("https://");
@@ -29,6 +35,7 @@ const isHASH256 = (e) => e.startsWith("[sha256]") && e.endsWith("[/sha256]");
 const isHASH256Parts = (e) =>
   e.startsWith("[sha256p]") && e.endsWith("[/sha256p]");
 const isHASH1Parts = (e) => e.startsWith("[sha1p]") && e.endsWith("[/sha1p]");
+const isTotpParts = (e) => e.startsWith("[totp2]") && e.endsWith("[/totp2]");
 
 async function sha256_simple(message: string): Promise<string> {
   // encode as UTF-8
@@ -55,7 +62,8 @@ export const redactCopy = (txt) => {
     .replace(/\[qr\].*?\[\/qr\]/g, "<QR CODE>")
     .replace(/\[sha256\].*?\[\/sha256\]/g, "<HASH256 CODE>")
     .replace(/\[sha256p\].*?\[\/sha256p\]/g, "<HASH256-Parts CODE>")
-    .replace(/\[sha1p\].*?\[\/sha1p\]/g, "<HASH1-Parts CODE>");
+    .replace(/\[sha1p\].*?\[\/sha1p\]/g, "<HASH1-Parts CODE>")
+    .replace(/\[totp2\].*?\[\/totp2\]/g, "<TOTP-Parts CODE>");
 };
 
 export const isRedacted = (txt) => {
@@ -90,7 +98,7 @@ const SecretMessage = (props: {
               let txt = e.target.value;
               setInput(txt);
               props
-                .cb(props.sharedSecret + txt)
+                .cb(txt + props.sharedSecret)
                 .then((e) => setResult(e))
                 .catch((e) => setResult(`Error: ${e}`));
             }}
@@ -121,10 +129,9 @@ const SecretMessageParts = (props: {
   unlock: UnlockDef;
 }) => {
   const CalculateHash = async (code: string) => {
-    const DELIM = "::";
     const u = props.unlock;
 
-    let dataparts = code.split(DELIM);
+    let dataparts = code.split(SHA_DELIM);
     // Splitting text where prefix=postfix, we can just use odd,even
     let state = undefined;
     for (let i = 0; i < dataparts.length; i++) {
@@ -134,7 +141,7 @@ const SecretMessageParts = (props: {
         // client side:
         state = hashStep(part, props.hashType, state);
       } else {
-        let result = await fetchFinishUnlock(
+        let result = await fetchFinishUnlockSha(
           u.encPass,
           u.from,
           u.to,
@@ -171,7 +178,7 @@ const SecretMessageParts = (props: {
             <Button
               type="primary"
               onClick={(e) => {
-                CalculateHash(props.sharedSecret + input)
+                CalculateHash(input + props.sharedSecret)
                   .then((e) => setResult(e))
                   .catch((e) => setResult(`Error: ${e}`));
               }}
@@ -199,6 +206,83 @@ const SecretMessageParts = (props: {
   );
 };
 
+const TOTPParts = (props: {
+  hashType: string;
+  sharedSecret: string;
+  unlock: UnlockDef;
+}) => {
+  //totp2
+  const CalculateTOTPHashCode = async (innerText: string) => {
+    const u = props.unlock;
+
+    let dataparts = innerText.split(MAC_DELIM);
+    if (dataparts.length !== 2)
+      return "Bad Format, " + dataparts.length + "parts (!=2)";
+
+    let keys = {
+      serverKey_enc: dataparts[0],
+      clientKey: JSON.parse(dataparts[1])
+    };
+
+    let totp_signature = await twoStepSha1Hmac(
+      async (digest) => {
+        return (
+          await fetchFinishUnlockOTP(
+            u.encPass,
+            u.from,
+            u.to,
+            u.keySalt,
+            u.unlockProof,
+            "sha1",
+            keys.serverKey_enc,
+            JSON.stringify(digest)
+          )
+        ).data.hashstep;
+      },
+      keys.clientKey,
+      getTimeDataNumArray()
+    );
+
+    return GenerateTOTPWithSign(totp_signature).toString();
+  };
+
+  const [result, setResult] = React.useState("000000");
+  return (
+    <>
+      Enter code:
+      <ul style={{ width: "100%" }}>
+        <li>
+          <Space direction="horizontal">
+            <Button
+              type="primary"
+              onClick={(e) => {
+                CalculateTOTPHashCode(props.sharedSecret)
+                  .then((e) => setResult(e || "ERRERR"))
+                  .catch((e) => setResult(`Error: ${e}`));
+              }}
+            >
+              Get Code!
+            </Button>
+          </Space>
+        </li>
+        <li>
+          <Text code>{result.split("").join(" ")}</Text>{" "}
+          <Paragraph
+            copyable={{
+              icon: [
+                <CopyOutlined style={{ fontSize: "2em" }} key="copy-icon" />,
+                <CheckOutlined style={{ fontSize: "2em" }} key="copied-icon" />
+              ],
+              text: result
+            }}
+            style={{ wordBreak: "break-all" }}
+          ></Paragraph>
+        </li>
+      </ul>
+    </>
+  );
+};
+
 export function TextEffects(props: { text: string; unlock: UnlockDef }) {
   return (
     <>
@@ -220,6 +304,15 @@ export function TextEffects(props: { text: string; unlock: UnlockDef }) {
               src={link}
               alt="Secret"
               key={e + i}
+            />
+          );
+        } else if (isTotpParts(e)) {
+          let totpStr = e.match(/\[totp2\]([\S]+?)\[\/totp2\]/)[1];
+          return (
+            <TOTPParts
+              unlock={props.unlock}
+              hashType={"sha1"}
+              sharedSecret={totpStr}
             />
           );
         } else if (isTOTP(e)) {

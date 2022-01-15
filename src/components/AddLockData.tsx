@@ -20,12 +20,14 @@ import { addLockedData, KeyDef } from "../redux/main-slice";
 import { useAppDispatch, useAppSelector } from "../redux/store";
 import { BoldTime } from "./BoldTime";
 import { ShowOrDelete } from "./AvailData";
+import { TOTP2Keys } from "../crypto/cryptoUtils";
 
 const { Panel } = Collapse;
 const { Text } = Typography;
 const { TextArea } = Input;
 
 export const SHA_DELIM = "`~SHA~`";
+export const MAC_DELIM = "`~MAC~`";
 
 export function AddLockData() {
   const dispath = useAppDispatch();
@@ -62,86 +64,143 @@ export function AddLockData() {
   let key2value = (k: KeyDef) => k.keySalt + "|" + k.id;
   let value2salt = (v: string) => v.split("|")[0];
 
-  const startLockDataProcess = () => {
+  const convertMacParts = async (
+    data: string,
+    randomPass: string,
+    addAlert: (type: AlertType, msg: string) => void
+  ) => {
+    let dataparts = data.split(MAC_DELIM);
+    // Splitting text where prefix=postfix, we can just use odd,even
+    let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
+    let MACparts = dataparts.filter((e, i) => i % 2 === 1);
+    let MACKeyPairs = MACparts.map((e) => TOTP2Keys(e, "sha1"));
+
+    if (MACparts.length === 0) return data;
+
+    let encrHashParts = (await fetchEncHash(
+      MACKeyPairs.map((e) => JSON.stringify(e.serverKey)),
+      randomPass
+    ).catch((e) => {
+      addAlert("error", `Error fetching hashparts (otp): ${e}`);
+    })) || { err: "void fetchEncHash", data: { encparts: [] } };
+
+    if (!!encrHashParts.err)
+      throw new Error("Fetch hashparts (otp), " + encrHashParts.err);
+
+    let dataWithHashparts = dataStripped
+      .map((e, i) =>
+        i !== dataStripped.length - 1
+          ? e +
+            (MACparts[i].length > 0 // real hash and not end\start element
+              ? encrHashParts.data.encparts[i] +
+                MAC_DELIM +
+                JSON.stringify(MACKeyPairs[i].clientKey)
+              : "")
+          : e
+      )
+      .join("");
+    return dataWithHashparts;
+  };
+
+  const convertHashParts = async (
+    data: string,
+    randomPass: string,
+    addAlert: (type: AlertType, msg: string) => void
+  ) => {
+    let dataparts = data.split(SHA_DELIM);
+    // Splitting text where prefix=postfix, we can just use odd,even
+    let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
+    let hashparts = dataparts.filter((e, i) => i % 2 === 1);
+
+    if (hashparts.length === 0) return data;
+
+    let encrHashParts = (await fetchEncHash(hashparts, randomPass).catch(
+      (e) => {
+        addAlert("error", `Error fetching hashparts (hash): ${e}`);
+      }
+    )) || { err: "void fetchEncHash", data: { encparts: [] } };
+    if (!!encrHashParts.err)
+      throw new Error("Fetch hashparts (hash), " + encrHashParts.err);
+
+    let dataWithHashparts = dataStripped
+      .map((e, i) =>
+        i !== dataStripped.length - 1
+          ? e +
+            (hashparts[i].length > 0 // real hash and not end\start element
+              ? SHA_DELIM + encrHashParts.data.encparts[i] + SHA_DELIM
+              : "")
+          : e
+      )
+      .join("");
+    return dataWithHashparts;
+  };
+
+  const startLockDataProcess = async () => {
     if (locked.filter((e) => e.desc === name).length > 0) {
       addAlert("info", `Entry with '${name}' already exist!`);
       return;
     }
+
     let randomPass = uuidv4();
-    fetchEncPass(
+    let encRandomPass = (await fetchEncPass(
       selectedKeysSalt.map((e) => value2salt(e)),
       randomPass
-    )
-      .then((result) => {
-        if (!!result.err) {
-          addAlert("error", `${result.err || "<empty error>"}`);
-          return;
-        } else {
-          try {
-            let dataparts = data.split(SHA_DELIM);
-            // Splitting text where prefix=postfix, we can just use odd,even
-            let dataStripped = dataparts.filter((e, i) => i % 2 === 0);
-            let hashparts = dataparts.filter((e, i) => i % 2 === 1);
-            fetchEncHash(hashparts, randomPass)
-              .then((encrHashParts) => {
-                if (!!result.err)
-                  throw new Error("Fetch hashparts, " + result.err);
+    ).catch((e) => {
+      addAlert("error", `Error fetching: ${e}`);
+    })) || { err: "void fetchEncPass", data: { enckey: "" } };
 
-                let dataWithHashparts = dataStripped
-                  .map((e, i) =>
-                    i !== dataStripped.length - 1
-                      ? e +
-                        (hashparts[i].length > 0 // real hash and not end\start element
-                          ? encrHashParts.data.encparts[i]
-                          : "")
-                      : e
-                  )
-                  .join("");
+    if (!!encRandomPass.err) {
+      addAlert("error", `${encRandomPass.err || "<empty error>"}`);
+      return;
+    }
 
-                const dataEncrypted = encryptor
-                  .createEncryptor(randomPass)
-                  .encrypt(dataWithHashparts);
+    try {
+      let dataWithEncHashParts = await convertMacParts(
+        data,
+        randomPass,
+        addAlert
+      );
 
-                if (
-                  !result ||
-                  !result.data ||
-                  !result.data.enckey ||
-                  result.data.enckey.length !== selectedKeysSalt.length
-                ) {
-                  addAlert("error", "Can't read encryption result");
-                } else {
-                  dispath(
-                    addLockedData({
-                      desc: name,
-                      encData: dataEncrypted,
-                      availablePass: selectedKeysSalt.map((salt, i) => ({
-                        encPass: result.data.enckey[i],
-                        keySalt: value2salt(salt)
-                      }))
-                    })
-                  );
-                  // clear data of this
-                  setData("");
-                  setName("");
+      dataWithEncHashParts = await convertHashParts(
+        dataWithEncHashParts,
+        randomPass,
+        addAlert
+      );
 
-                  addAlert(
-                    "success",
-                    `Data was saved sucessfully! (${result.data.enckey.length} keys)`
-                  );
-                }
-              })
-              .catch((e) => {
-                addAlert("error", `Error fetching hashparts: ${e}`);
-              });
-            //result.data.enckey
-          } catch (error) {
-            addAlert("error", `Error encrypting: '${error}'`);
-          }
-        }
-      })
-      .catch((e) => {
-        addAlert("error", `Error fetching: ${e}`);
-      });
+      const dataEncrypted = encryptor
+        .createEncryptor(randomPass)
+        .encrypt(dataWithEncHashParts);
+
+      if (
+        !encRandomPass ||
+        !encRandomPass.data ||
+        !encRandomPass.data.enckey ||
+        encRandomPass.data.enckey.length !== selectedKeysSalt.length
+      ) {
+        addAlert("error", "Can't read encryption result");
+      } else {
+        dispath(
+          addLockedData({
+            desc: name,
+            encData: dataEncrypted,
+            availablePass: selectedKeysSalt.map((salt, i) => ({
+              encPass: encRandomPass.data.enckey[i],
+              keySalt: value2salt(salt)
+            }))
+          })
+        );
+        // clear data of this
+        setData("");
+        setName("");
+
+        addAlert(
+          "success",
+          `Data was saved sucessfully! (${encRandomPass.data.enckey.length} keys)`
+        );
+      }
+    } catch (error) {
+      addAlert("error", `Error encrypting: '${error}'`);
+    }
   };
 
   return (
@@ -205,12 +264,12 @@ export function AddLockData() {
                   <Text
                     code
                     copyable={{
-                      text: "[sha256p]aaaa::`~SHA~`bbbb`~SHA~`::cccc[/sha256p]"
+                      text: "[sha256p]aaaa`~SHA~`bbbb`~SHA~`cccc[/sha256p]"
                     }}
                   >
                     [sha256p]aaaa
                     <Text mark>
-                      ::`~SHA~`<b>bbbb</b>`~SHA~`::
+                      `~SHA~`<b>bbbb</b>`~SHA~`
                     </Text>
                     cccc[/sha256p]
                   </Text>{" "}
@@ -222,13 +281,15 @@ export function AddLockData() {
                   <b> [totp2] </b> tags with:
                   <Text
                     code
-                    copyable={{ text: "[totp2]`~MAC~`TOTP_CODE`~MAC~`[totp2]" }}
+                    copyable={{
+                      text: "[totp2]`~MAC~`TOTP_CODE`~MAC~`[/totp2]"
+                    }}
                   >
                     [totp2]
                     <Text mark>
                       `~MAC~`<b>TOTP_CODE</b>`~MAC~`
                     </Text>
-                    [totp2]
+                    [/totp2]
                   </Text>
                 </li>
               </ul>
@@ -268,7 +329,7 @@ export function AddLockData() {
         <Button
           type="primary"
           disabled={selectedKeysSalt.length === 0 || !data || !name}
-          onClick={() => {
+          onClick={async () => {
             startLockDataProcess();
           }}
         >

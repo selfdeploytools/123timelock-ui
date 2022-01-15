@@ -32,6 +32,36 @@ export type Group = {
 };
 
 // =============  API  ==============
+const safeB64Pairs: [string, RegExp][][] = [
+  // Including premaid regexes
+  [
+    ["+", /\+/g],
+    ["-", /-/g]
+  ],
+  [
+    ["/", /\//g],
+    ["_", /_/g]
+  ],
+  [
+    ["=", /=/g],
+    [".", /\./g]
+  ]
+];
+
+export function makeSafeB64_32(b64string: string) {
+  let result = b64string || "";
+  safeB64Pairs.forEach((p) => {
+    result = result.replace(p[0][1], p[1][0]);
+  });
+  return result;
+}
+export function undoSafeB64_32(b64string: string) {
+  let result = b64string || "";
+  safeB64Pairs.forEach((p) => {
+    result = result.replace(p[1][1], p[0][0]);
+  });
+  return result;
+}
 
 const SERVER_BASE =
   localStorage.getItem("SERVER_URL") ||
@@ -47,7 +77,7 @@ const fastGET = async (
       url += `&${k}=${v}`;
     } else {
       v.forEach((val) => {
-        url += `&${k}=${val}`;
+        url += `&${k}=${encodeURIComponent(val)}`;
       });
     }
   });
@@ -126,21 +156,47 @@ export const fetchStartUnlock = async (
   return result;
 };
 
-export const fetchFinishUnlock = async (
+export const fetchFinishUnlockSimple = async (
   encPass: string,
   from: number,
   to: number,
   salt: string,
-  proof: string,
-  hashtype?: string,
-  hashstate?: string,
-  hashsecret?: string
+  proof: string
 ) => {
   const result: {
     err?: string;
     data: {
       pass: string;
       timeLeftOpen: string;
+    };
+  } = await fastGET("/unlock/finish", {
+    enckey: encPass,
+    from: from.toString(),
+    to: to.toString(),
+    proof,
+    salt
+  });
+  console.log("/unlock/finish (simple)", {
+    // redact pass
+    err: result.err,
+    data: result?.data?.timeLeftOpen
+  });
+  return result;
+};
+
+export const fetchFinishUnlockSha = async (
+  encPass: string,
+  from: number,
+  to: number,
+  salt: string,
+  proof: string,
+  hashtype: string,
+  hashstate: string,
+  hashsecret: string
+) => {
+  const result: {
+    err?: string;
+    data: {
       hashstep: string;
     };
   } = await fastGET("/unlock/finish", {
@@ -149,11 +205,50 @@ export const fetchFinishUnlock = async (
     to: to.toString(),
     proof,
     salt,
+    mode: "sha-step",
     hashtype,
     hashstate,
     hashsecret
   });
-  console.log("/unlock/finish", { err: result.err }); // redact pass
+  console.log("/unlock/finish (sha-step)", {
+    // redact pass
+    err: result.err,
+    data: result?.data?.hashstep
+  });
+  return result;
+};
+
+export const fetchFinishUnlockOTP = async (
+  encPass: string,
+  from: number,
+  to: number,
+  salt: string,
+  proof: string,
+  hashtype: string,
+  hashsecret: string,
+  hashextra: string
+) => {
+  const result: {
+    err?: string;
+    data: {
+      hashstep: string;
+    };
+  } = await fastGET("/unlock/finish", {
+    enckey: encPass,
+    from: from.toString(),
+    to: to.toString(),
+    proof,
+    salt,
+    mode: "otp-step",
+    hashtype,
+    hashsecret: makeSafeB64_32(hashsecret),
+    hashextra
+  });
+  console.log("/unlock/finish (otp-step)", {
+    // redact pass
+    err: result.err,
+    data: result?.data?.hashstep
+  });
   return result;
 };
 
