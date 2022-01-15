@@ -1,7 +1,6 @@
-import { decodeBase32Key } from "./otp_parts";
 import * as sjcl from "./custom_sjcl_1.0.8";
 
-export function hash(text: string, type = "sha256"): string {
+export function hashSyncExample(text: string, type = "sha256"): string {
   let hash = type === "sha256" ? new sjcl.hash.sha256() : new sjcl.hash.sha1();
   hash.update(text);
   let uint32_arr = hash.finalize() as Array<number>;
@@ -71,18 +70,24 @@ export async function twoStepSha1Hmac(
   keyIn_client,
   code_int_arr: number[]
 ): Promise<number[]> {
+  //
+  // Hash (client_key (inner) + counter bytes (sjcl need 32int))
+  let counterUint32Arr = sjcl.codec.bytes.toBits(code_int_arr);
+
   let innerState = null;
   innerState = hashStep(keyIn_client, "sha1", innerState);
-  let innerDigest = hashFinalStepBytes(
-    sjcl.codec.bytes.fromBits(code_int_arr),
-    "sha1",
-    innerState
-  );
+  let innerDigest = hashFinalStepBytes(counterUint32Arr, "sha1", innerState);
+
+  // Sha1 5 numbers (32bit?)
   let innerDigestLeft = innerDigest.slice(0, innerDigest.length / 2);
   let innerDigestRight = innerDigest.slice(innerDigest.length / 2);
-  let keyOutState = await getKeyOut_server(innerDigestLeft);
-  let finalHash = hashFinalStep(innerDigestRight, "sha1", keyOutState);
+
+  // Server side of hash(server_key (outer) + digest first bytes)
+  let serverOutState = await getKeyOut_server(innerDigestLeft);
+
+  // Client side again to finish:
+  let finalHash = hashFinalStep(innerDigestRight, "sha1", serverOutState);
   let finalHashBytesArray = hex2FFarr(finalHash);
-  console.log("sign", { finalHash, finalHashBytesArray });
+
   return finalHashBytesArray;
 }
