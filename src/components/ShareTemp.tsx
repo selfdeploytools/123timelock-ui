@@ -143,8 +143,11 @@ export function ShareTemp() {
         >
           {temps.map((e) => (
             <Radio key={e.tempproof} value={e.tempproof}>
-              <BoldTime time={e.token} /> <b> Time passed: </b>
-              {prettyms(myNow - e.from, { secondsDecimalDigits: 0 })}
+              <Space direction="horizontal" wrap={true}>
+                <BoldTime time={e.token} />
+                <b> Time passed: </b>
+                {prettyms(myNow - e.from, { secondsDecimalDigits: 0 })}
+              </Space>
               &nbsp;&nbsp;&nbsp;
             </Radio>
           ))}

@@ -66,24 +66,29 @@ export function undoSafeB64_32(b64string: string) {
 const SERVER_BASE =
   localStorage.getItem("SERVER_URL") ||
   "https://timelock-back-ga.my123.app/api";
-const fastGET = async (
+const fastFetch = async (
   path: string,
   params: { [key: string]: string | string[] }
 ) => {
-  let url = SERVER_BASE + path + "?rnd=" + Math.random();
+  let url = SERVER_BASE + path + "?rnd=" + Date.now() + "." + Math.random();
+  let reqBody = "_ignore=0"; // so we can append others with '&'
   Object.keys(params).forEach((k) => {
     const v = params[k];
     if (!Array.isArray(v)) {
-      url += `&${k}=${v}`;
+      reqBody += `&${k}=${encodeURIComponent(v)}`;
     } else {
       v.forEach((val) => {
-        url += `&${k}=${encodeURIComponent(val)}`;
+        reqBody += `&${k}=${encodeURIComponent(val)}`;
       });
     }
   });
   const result = { err: null, data: null };
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-type": "application/x-www-form-urlencoded" },
+      body: reqBody
+    });
     const json = await response.json();
     result.data = json;
     if (result.data.err) {
@@ -102,7 +107,7 @@ export const fetchNewGroup = async (times: Array<string>) => {
       salt: string;
       tokens: Array<TimeToken>;
     };
-  } = await fastGET("/setup", { time: times });
+  } = await fastFetch("/setup", { time: times });
   console.log("/setup", result);
   return result;
 };
@@ -113,7 +118,7 @@ export const fetchEncPass = async (salts: string[], pass: string) => {
     data: {
       enckey: string[];
     };
-  } = await fastGET("/enc", { salts, pass });
+  } = await fastFetch("/enc", { salts, pass });
   console.log("/enc", result);
   return result;
 };
@@ -124,7 +129,7 @@ export const fetchEncHash = async (hashparts: string[], pass: string) => {
     data: {
       encparts: string[];
     };
-  } = await fastGET("/enchash", { hashparts, pass });
+  } = await fastFetch("/enchash", { hashparts, pass });
   console.log("/enchash", result);
   return result;
 };
@@ -144,7 +149,7 @@ export const fetchStartUnlock = async (
       to: number;
       proof: string;
     };
-  } = await fastGET("/unlock/begin", {
+  } = await fastFetch("/unlock/begin", {
     enckey: encPass,
     salt: keySalt,
     token: keyId,
@@ -169,7 +174,7 @@ export const fetchFinishUnlockSimple = async (
       pass: string;
       timeLeftOpen: string;
     };
-  } = await fastGET("/unlock/finish", {
+  } = await fastFetch("/unlock/finish", {
     enckey: encPass,
     from: from.toString(),
     to: to.toString(),
@@ -199,7 +204,7 @@ export const fetchFinishUnlockSha = async (
     data: {
       hashstep: string;
     };
-  } = await fastGET("/unlock/finish", {
+  } = await fastFetch("/unlock/finish", {
     enckey: encPass,
     from: from.toString(),
     to: to.toString(),
@@ -233,7 +238,7 @@ export const fetchFinishUnlockOTP = async (
     data: {
       hashstep: string;
     };
-  } = await fastGET("/unlock/finish", {
+  } = await fastFetch("/unlock/finish", {
     enckey: encPass,
     from: from.toString(),
     to: to.toString(),
@@ -263,7 +268,7 @@ export const fetchCreateTemp = async (
       from: number;
       tempproof: string;
     };
-  } = await fastGET("/temp/begin", {
+  } = await fastFetch("/temp/begin", {
     token,
     tokenproof,
     salt
@@ -284,7 +289,7 @@ export const fetchConvertFastTemp = async (
       mindiff: string;
       fastproof: string;
     };
-  } = await fastGET("/temp/fastcopy", {
+  } = await fastFetch("/temp/fastcopy", {
     token,
     tempproof,
     from: from.toString(),
@@ -308,7 +313,7 @@ export const fetchUnloackWithFast = async (
       to: number;
       proof: string;
     };
-  } = await fastGET("/temp/unlock", {
+  } = await fastFetch("/temp/unlock", {
     token,
     salt,
     mindiff,
