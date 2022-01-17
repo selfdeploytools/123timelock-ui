@@ -1,3 +1,9 @@
+// ================================================================
+// To avoid CodeSandbox auto detecting and blocking serviceWorker
+// we call this file `sw._js` and in package build we rename it
+// and in the public HTML we of course import the correct `sw.js`
+// ================================================================
+
 // Registering Service Worker
 if (typeof window !== undefined  && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
