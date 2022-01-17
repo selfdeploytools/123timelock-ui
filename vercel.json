@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "build": "node build-script.js && mv out public"
+    "build": "npm run build"
   }
 }
