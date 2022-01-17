@@ -17,6 +17,7 @@
     "lodash": "4.17.21",
     "otplib": "12.0.1",
     "pretty-ms": "7.0.1",
+    "pwa": "1.9.7",
     "qrcode": "1.4.4",
     "qrcode.react": "1.0.1",
     "react": "17.0.0",
@@ -24,7 +25,9 @@
     "react-qr-reader": "2.2.1",
     "react-redux": "7.2.4",
     "react-scripts": "4.0.3",
-    "simple-encryptor": "4.0.0"
+    "service-worker": "0.0.0",
+    "simple-encryptor": "4.0.0",
+    "workbox": "0.0.0"
   },
   "devDependencies": {
     "@types/react": "16.9.19",
