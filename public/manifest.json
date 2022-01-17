@@ -1,0 +1,22 @@
+{
+  "name": "123time.lock",
+  "short_name": "123timelock",
+  "theme_color": "#0b214a",
+  "background_color": "#d9bafd",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "https://timelock.my123.app/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
