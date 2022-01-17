@@ -33,7 +33,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI='' mv ./public/service-worker._js ./public/service-worker.js && react-scripts build",
+    "build": "mv ./public/service-worker._js ./public/service-worker.js && CI='' react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
