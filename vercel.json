@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "on_vercel_side": 1,
     "build": "npm run build"
   }
 }
