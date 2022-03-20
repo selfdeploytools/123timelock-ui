@@ -326,12 +326,12 @@ export default function App() {
         </>
         <Divider />
         <div style={{ textAlign: "center" }}>
-          Provided with no cost,
+          Free trial provided with no cost,
           <br />
           thanks to the free resources from Vercel.com + CodeSandbox.io 💘{" "}
           <br />
-          Copyright 2021 (c) timelock.my123.app (c) 123timelock <br />
-          Version 3 - 18/01/22 1:00 AM <br />
+          Copyright 2021-2022 (c) timelock.my123.app (c) 123timelock <br />
+          Version 3 - 20/03/22 7:00 PM <br />
           <Button type="link" onClick={() => setShowDebug((old) => !old)}>
             Toggle Debug
           </Button>{" "}
