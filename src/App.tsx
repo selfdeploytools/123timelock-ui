@@ -331,7 +331,7 @@ export default function App() {
           thanks to the free resources from Vercel.com + CodeSandbox.io 💘{" "}
           <br />
           Copyright 2021-2022 (c) timelock.my123.app (c) 123timelock <br />
-          Version 3 - 20/03/22 7:00 PM <br />
+          Version 3 - 25/03/22 7:00 PM <br />
           <Button type="link" onClick={() => setShowDebug((old) => !old)}>
             Toggle Debug
           </Button>{" "}
